@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf8" name="viewport" content="width=device-width, initial-scale=1" content="This site displays restaurants in the New York area along with reviews, hours and other details">
+  <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css"/>
+  <meta name="theme-color" content="#002868">
+   <link rel="manifest" href="/manifest.json">
+  <title>Restaurant Reviews</title>
+</head>
+
+<body>
+
+  <div id="all_content">
+  <header>
+    <a href="#neighborhoods-select" class="skip_link">Main content</a>
+    <nav>
+      <h1>Restaurant Reviews</h1>
+    </nav>
+  </header>
+
+  <main id="maincontent">
+    <section tabindex="-1" id="map-container">
+       <title> Map </title>
+          <div tabindex="0" id="map" role="application" aria-label="Map with restaurants"></div>
+    </section>
+    <section>
+    <section id="restaurant_details" tabindex="-1">
+      <div class="filter-options flexcontent">
+        <h2 class="filter_header">Filter Results</h2>
+        <div id="nhoodselect">
+        <select aria-label="filter" aria-labelledby="nhoodselect" id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()">
+          <option  value="all"> Neighborhoods</option>
+        </select>
+      </div>
+      <div id="cuisineselect">
+
+        <select aria-label="filter" aria-labelledby="cuisineselect" id="cuisines-select" name="cuisines" label="select cuisine" onchange="updateRestaurants()">
+
+          <option value="all">Cuisines</option>
+
+        </select>
+      </div>
+    </div>
+      <ul id="restaurants-list"></ul>
+    </section>
+
+   </section> 
+
+  </main>
+</div>
+<script type="application/javascript" charset="utf-8" src="/js/libs.js"></script>
+<script type="application/javascript" charset="utf-8" src="/js/dbhelper.js"></script>
+<script type="application/javascript" charset="utf-8" src="/js/main.js"></script>
+<link rel="stylesheet" href="/css/styles.css">
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAm444SdJqGIePm1p0oGmntZWP38Q_hg8s&libraries=places&callback=initMap"></script>
+
+<footer id="footer">
+    <small>Copyright 2017 All Rights Reserved.<small>  
+</footer>
+</body>
+</html>
+<script>
+/* global start*/
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('serviceworker.js')
+    .then(function(registration) {
+      console.log('Service Worker registration successful.');
+    })
+    .catch(function(err) {
+      console.log('Service Worker registration failed: ', err);
+    });
+}
+
+</script>

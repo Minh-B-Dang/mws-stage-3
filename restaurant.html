@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf8" name="viewport" content="width=device-width, initial-scale=1" content="This site displays restaurants in the New York area along with reviews, hours and other details">
+  <!-- Normalize.css for better cross-browser consistency -->
+  <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css"/>
+  <meta name="theme-color" content="#002868">
+  <title>Restaurant Info</title>
+</head>
+
+<body>
+<div id="all_content">
+  <!-- Beginning header -->
+  <header>
+    <a href="#restaurant-container" class="skip_link"> Main content </a>
+    <!-- Beginning nav -->
+    <nav aria-label="Breadcrumb" class="breadcrumb">
+      <h1>Restaurant Reviews</h1>
+    </nav>
+    <!-- Beginning breadcrumb -->
+    <ul id="breadcrumb" >
+      <li><a id="home" href="/">Home</a></li>
+    </ul>
+    <!-- End breadcrumb -->
+    <!-- End nav -->
+  </header>
+  <!-- End header -->
+
+  <!-- Beginning main -->
+  <main id="maincontent">
+    <!-- Beginning map -->
+    <section id="map-container">
+         <title>A map</title>
+     <div tabindex="0" id="map" role="application" aria-label="Map with restaurants"></div>
+    </section>
+    <!-- End map -->
+    <!-- Beginning restaurant -->
+  <section id="restaurant_details">
+    <section id="restaurant-container">
+      <h2 id="restaurant-name"></h2>
+
+      <img class="res_img" id="restaurant-img">
+      <p id="restaurant-cuisine"></p>
+      <p id="restaurant-address"></p>
+
+      <table id="restaurant-hours"><caption>Hours</caption></table>
+    </section>
+    <!-- end restaurant -->
+
+    <!-- Beginning reviews -->
+    <section id="reviews-container">
+        <ul id="reviews-list"></ul>
+    </section>
+      <!-- End reviews -->
+
+  </div>
+</div>
+
+    <!-- End reviews -->
+
+
+    </section>
+  </main>
+  <!-- End main -->
+</div>
+
+  <!-- Beginning footer -->
+  <footer id="footer">
+    <small>Copyright 2017 All Rights Reserved.<small>
+
+  </footer>
+  <!-- End footer -->
+
+  <!-- Beginning scripts -->
+  <!-- DB helpers -->
+   <script type="application/javascript" charset="utf-8" src="js/libs.js"></script>
+  <script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>
+  <!-- Main javascript file -->
+ <script type="text/javascript" src="js/restaurant_info.js"></script>
+<link rel="stylesheet" href="css/styles.css">
+  <!-- Google Maps -->
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDxakT5jRg-pedFlANk0p-vzaeZ1FMafB8&libraries=places&callback=initMap"></script>
+  <!-- End scripts -->
+
+
+</body>
+
+
+</html>
