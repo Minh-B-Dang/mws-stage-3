@@ -182,7 +182,7 @@ createRestaurantHTML = (restaurant) => {
   //change fav status on click
   favorite.onclick = function() {
     const isFavNow = !restaurant.is_favorite;
-    DBHelper.updateFavStatus(restaurant.id, isFavNow);
+    DBHelper.updateStatus(restaurant.id, isFavNow);
     restaurant.is_favorite = !restaurant.is_favorite
     changeFavElementClass(favorite, restaurant.is_favorite)
   };
