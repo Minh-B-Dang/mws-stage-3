@@ -1,40 +1,42 @@
 let restaurants,
   neighborhoods,
   cuisines
-var map
+var newMap
 var markers = []
 
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
+  initMap();
   fetchNeighborhoods();
   fetchCuisines();
 });
+
 
 /**
  * Fetch all neighborhoods and set their HTML.
  */
 fetchNeighborhoods = () => {
-  DBHelper.fetchNeighborhoods((error, neighborhoods) => {
-    if (error) { // Got an error
-      console.error(error);
-    } else {
+  DBHelper.fetchNeighborhoods()
+    .then(neighborhoods => {
       self.neighborhoods = neighborhoods;
+      console.log(neighborhoods)
       fillNeighborhoodsHTML();
-    }
-  });
+    })
+    .catch(error => console.error(error));
 }
 
 /**
  * Set neighborhoods HTML.
  */
- fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
+fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
   const select = document.getElementById('neighborhoods-select');
   neighborhoods.forEach(neighborhood => {
     const option = document.createElement('option');
     option.innerHTML = neighborhood;
     option.value = neighborhood;
+    console.log(option);
     select.append(option);
   });
 }
@@ -42,17 +44,13 @@ fetchNeighborhoods = () => {
 /**
  * Fetch all cuisines and set their HTML.
  */
-
 fetchCuisines = () => {
-  DBHelper.fetchCuisines((error, cuisines) => {
-    if (error) { // Got an error!
-      console.log(error);
-    } else {
+  DBHelper.fetchCuisines()
+    .then(cuisines => {
       self.cuisines = cuisines;
       fillCuisinesHTML();
-      }
-    }
-  );
+    })
+    .catch(error => console.log(error));
 }
 
 /**
@@ -69,22 +67,24 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
   });
 }
 
-/**
- * Initialize Google map, called from HTML.
- */
-window.initMap = () => {
-  let loc = {
-    lat: 40.722216,
-    lng: -73.987501
-  };
-  const map = document.getElementById('map');
-  self.map = new google.maps.Map(document.getElementById('map'), {
-    zoom: 12,
-    center: loc,
-    scrollwheel: false
-  });
+initMap = () => {
+  self.newMap = L.map('map', {
+        center: [40.722216, -73.987501],
+        zoom: 12,
+        scrollWheelZoom: false
+      });
+  L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.jpg70?access_token={mapboxToken}', {
+    mapboxToken: 'pk.eyJ1IjoibWRhbmcyMiIsImEiOiJjam0xOGI4Z3owaW14M3ZwYzBrandwMHlnIn0.H9mP6gPZcX6KBkRkeNCv9A',
+    maxZoom: 18,
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+      '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+      'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+    id: 'mapbox.streets'
+  }).addTo(newMap);
+
   updateRestaurants();
 }
+
 
 /**
  * Update page and map for current restaurants.
@@ -99,18 +99,13 @@ updateRestaurants = () => {
   const cuisine = cSelect[cIndex].value;
   const neighborhood = nSelect[nIndex].value;
 
-  DBHelper.fetchRestaurantByCuisineAndNeighborhood(
-    cuisine, neighborhood, 
-    (error, restaurants) => {
-      if (error) { // Got an error!
-      console.error(error);
-    } else {
+  DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood)
+    .then(restaurants => {
       resetRestaurants(restaurants);
       fillRestaurantsHTML();
-    }
-  })
+    })
+    .catch(error => console.error(error));
 }
-
 
 /**
  * Clear current restaurants, their HTML and remove their map markers.
@@ -122,7 +117,9 @@ resetRestaurants = (restaurants) => {
   ul.innerHTML = '';
 
   // Remove all map markers
-  self.markers.forEach(m => m.setMap(null));
+  if (self.markers) {
+    self.markers.forEach(marker => marker.remove());
+  }
   self.markers = [];
   self.restaurants = restaurants;
 }
@@ -143,35 +140,54 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
  */
 createRestaurantHTML = (restaurant) => {
   const li = document.createElement('li');
-  const picture = document.createElement('picture');
-  const source = document.createElement('source');
-  source.media = "(min-width: 320px)"
-  picture.append(source);
 
   const image = document.createElement('img');
-  image.className = 'restaurant-img';
-  image.alt = "restaurant " + restaurant.name;
-  
-  const img_name = restaurant.photograph;
+  image.alt = `image of ${restaurant.name} restaurant`;
+  const config = {
+    threshold: 0.1
+  };
 
-  const img_num = restaurant.id;
-  image.srcset  =
-  "dest/img/"+img_num+"-256.jpg 256w "
-  "dest/img/"+img_num+"-320.jpg 320w "+
-  "dest/img/"+img_num+"-640.jpg 640w,"+"dest/img/"+img_num+"-1024.jpg 1024w";
-  image.sizes="50vw"
+  let observer;
+  if ('IntersectionObserver' in window) {
+    observer = new IntersectionObserver(onChanges, config);
+    observer.observe(image);
+  } else {
+    loadImage(image);
+  }
+  const loadImage = image => {
+    image.className = 'restaurant-img';
+    image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  }
 
-  
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  function onChanges(changes, observer) {
+    changes.forEach(change => {
+      if (change.intersectionRatio > 0) {
+        loadImage(change.target);
+        observer.unobserve(change.target);
+      } else {
+        console.log('image out of view');
+      }
+    });
+  }
 
-  picture.append(image)
+  li.append(image);
 
-
-  li.append(picture);
-
-  const name = document.createElement('h3');
+  const name = document.createElement('h2');
   name.innerHTML = restaurant.name;
   li.append(name);
+
+  const favorite = document.createElement('button');
+  favorite.innerHTML = '❤';
+  favorite.classList.add("fav_btn");
+  //change fav status on click
+  favorite.onclick = function() {
+    const isFavNow = !restaurant.is_favorite;
+    DBHelper.updateFavStatus(restaurant.id, isFavNow);
+    restaurant.is_favorite = !restaurant.is_favorite
+    changeFavElementClass(favorite, restaurant.is_favorite)
+  };
+  changeFavElementClass(favorite, restaurant.is_favorite)
+  li.append(favorite);
 
   const neighborhood = document.createElement('p');
   neighborhood.innerHTML = restaurant.neighborhood;
@@ -181,13 +197,29 @@ createRestaurantHTML = (restaurant) => {
   address.innerHTML = restaurant.address;
   li.append(address);
 
+
+
   const more = document.createElement('a');
-  more.innerHTML = restaurant.name +" info";
+  more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
-  li.append(more)
+  li.append(more);
 
   return li
-};
+}
+
+changeFavElementClass = (element, fav) => {
+  if (!fav) {
+    element.classList.remove('favorite_yes');
+    element.classList.add('favorite_no');
+    element.setAttribute('aria-label', 'mark as favorite');
+
+  } else {
+    element.classList.remove('favorite_no');
+    element.classList.add('favorite_yes');
+    element.setAttribute('aria-label', 'remove as favorite');
+
+  }
+}
 
 /**
  * Add markers for current restaurants to the map.
@@ -195,10 +227,12 @@ createRestaurantHTML = (restaurant) => {
 addMarkersToMap = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
     // Add marker to the map
-    const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
-    google.maps.event.addListener(marker, 'click', () => {
-      window.location.href = marker.url
-    });
+    const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.newMap);
+    marker.on("click", onClick);
+
+    function onClick() {
+      window.location.href = marker.options.url;
+    }
     self.markers.push(marker);
   });
 }
